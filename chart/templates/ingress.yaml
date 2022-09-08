@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enabled -}}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else }}
+apiVersion: networking.k8s.io/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  {{- if semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion }}
+  ingressClassName: {{ toYaml .Values.ingress.className }}
+  {{- end }}
+  rules:
+  {{- range .Values.ingress.hosts }}
+  - host: {{ toYaml . }}
+    http:
+      paths:
+      - backend:
+          {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+          service:
+            name: {{ include "app.fullname" $ }}-http
+            port:
+              name: http
+          {{- else }}
+          serviceName: {{ include "app.fullname" $ }}-http
+          servicePort: http
+          {{- end }}
+        path: {{ toYaml $.Values.ingress.path }}
+        {{- if semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion }}
+        pathType: {{ toYaml $.Values.ingress.pathType }}
+        {{- end }}
+  {{- end }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+{{- end }}
