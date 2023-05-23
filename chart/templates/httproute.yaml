@@ -1,0 +1,13 @@
+{{- if .Values.httpRoute.enabled -}}
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ include "app.fullname" . }}
+spec:
+  parentRefs: {{ toYaml .Values.httpRoute.parentRefs }}
+  hostnames: {{ toYaml .Values.httpRoute.hostnames }}
+  rules:
+  - backendRefs:
+    - name: {{ include "app.fullname" . }}-http
+      port: 80
+{{- end }}
